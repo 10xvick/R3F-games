@@ -1,5 +1,6 @@
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Canvas, RootState, useFrame } from "@react-three/fiber";
 import { Level } from "./level";
+import { useGamestore } from "./stores/game";
 
 export const Doodlejump = () => {
   return (
@@ -10,6 +11,10 @@ export const Doodlejump = () => {
   );
 };
 
-const onupdate = () => {
-  return useFrame((state, delta) => {});
+export const useUpdate = (cb: (state: RootState, delta: number) => void) => {
+  const { pause } = useGamestore();
+  return useFrame((state, delta) => {
+    if (pause) return;
+    cb(state, delta);
+  });
 };

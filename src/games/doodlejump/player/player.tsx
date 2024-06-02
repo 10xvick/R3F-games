@@ -1,60 +1,69 @@
 import { useEffect, useState } from "react";
-import { useFrame } from "@react-three/fiber";
 import { useInput } from "../../input/input";
 import { game } from "../blueprint/blueprint";
 import Box from "../prefabs/box";
 import { useLevelstore } from "../stores/level";
 import { utils } from "../../../utils/utils";
+import { useUpdate } from "../game";
+import { useGamestore } from "../stores/game";
 
 export default function Player() {
-  const [pos, setpos] = useState({ jump: false, jumpsteps: 0, x: 0, y: 0 });
+  const [playerdata, setplayerdata] = useState(game.player.initial);
   const { floors, activeFloor, setActiveFloor } = useLevelstore();
   const [xonland, setxonland] = useState(0);
+  const { setpause } = useGamestore();
 
   useInput("up", (e) => {
-    pos.jump = true;
-    pos.jumpsteps = 0;
+    playerdata.jump.active = true;
+    playerdata.jump.jumpsteps = 0;
     setActiveFloor(-1);
   });
 
-  useFrame((state, delta) => {
-    const player = { ...pos };
-    if (player.y < -200) player.y = -200;
+  useUpdate((state, delta) => {
+    const player = { ...playerdata };
+    if (player.position.y < -game.level.scale.y)
+      player.position.y = -game.level.scale.y;
 
     if (activeFloor) {
-      player.x = activeFloor.position.x + xonland;
-      player.y = activeFloor.position.y + 20;
+      player.position.x = activeFloor.position.x + xonland;
+      player.position.y = activeFloor.position.y + game.player.scale.y / 2;
     } else {
-      if (player.jump) {
-        const jumpstep = game.player.jump.limit - player.jumpsteps++;
-        if (jumpstep) player.y += delta * game.player.jump.strength * jumpstep;
+      if (player.jump.active) {
+        const jumpstep = game.player.jump.limit - player.jump.jumpsteps++;
+        if (jumpstep)
+          player.position.y += delta * game.player.jump.strength * jumpstep;
         else {
-          player.jumpsteps = 0;
-          player.jump = false;
+          player.jump.jumpsteps = 0;
+          player.jump.active = false;
         }
       } else {
         for (let i = 0; i < floors.length; i++) {
           const floor = floors[i];
           if (
             utils.collision.rect2rect.basic(floor, {
-              position: pos,
-              scale: { x: 20, y: 10 },
+              position: player.position,
+              scale: game.player.scale,
             })
           ) {
             setActiveFloor(i);
-            setxonland(player.x - floor.position.x);
+            setxonland(player.position.x - floor.position.x);
           }
         }
       }
-      player.y -= delta * game.gravity;
+      player.position.y -= delta * game.gravity;
     }
 
-    setpos({ ...player });
+    if (player.position.y < -game.level.scale.y + game.player.scale.y / 2)
+      setpause(true);
+    setplayerdata({ ...player });
   });
 
   return (
     <>
-      <Box scale={[20, 30, 10]} position={[pos.x, pos.y, 0]} />
+      <Box
+        scale={[game.player.scale.x, game.player.scale.y, 10]}
+        position={[playerdata.position.x, playerdata.position.y, 0]}
+      />
     </>
   );
 }

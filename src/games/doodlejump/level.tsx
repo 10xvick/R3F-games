@@ -5,6 +5,7 @@ import { utils } from "../../utils/utils";
 import { useLevelstore } from "./stores/level";
 import Box from "./prefabs/box";
 import { useState } from "react";
+import { useUpdate } from "./game";
 
 export function Level() {
   return (
@@ -33,7 +34,7 @@ const Floor = ({ i }: { i: number }) => {
 
   utils.number.randomRange(-200 + scale.x / 2, 200 - scale.x / 2);
 
-  useFrame((state, delta) => {
+  useUpdate((state, delta) => {
     if (position.y > -200) position.y -= delta * game.speed;
     else {
       position.x = utils.number.randomRange(
