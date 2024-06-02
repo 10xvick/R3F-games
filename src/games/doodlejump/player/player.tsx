@@ -10,6 +10,7 @@ import { useUpdate } from "../customHooks/update";
 
 export default function Player() {
   const { playerdata, setPlayerdata } = usePlayerStore();
+  const { setspeed, setscore, speed, score } = useGamestore();
   const { floors, activeFloor, setActiveFloor } = useLevelstore();
   const [xonland, setxonland] = useState(0);
   const { setpause } = useGamestore();
@@ -48,6 +49,9 @@ export default function Player() {
           ) {
             setActiveFloor(i);
             setxonland(player.position.x - floor.position.x);
+
+            setscore(score + 1);
+            setspeed(speed + 1);
           }
         }
       }
