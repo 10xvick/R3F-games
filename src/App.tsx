@@ -1,13 +1,31 @@
 import { useState } from "react";
 import "./App.css";
 import { Doodlejump } from "./games/doodlejump/game";
+import { BrowserRouter, Link, Route, Routes } from "react-router-dom";
+
+const games = [Doodlejump, GameContainer];
 
 function App() {
   return (
+    <Routes>
+      <Route path="/" element={<Home />}>
+        <Route path="/games" element={<Games />}></Route>
+      </Route>
+    </Routes>
+  );
+}
+
+function Home() {
+  return (
     <>
-      <GameContainer />
+      HOMe
+      <Link to={"/games"}>games</Link>
     </>
   );
+}
+
+function Games() {
+  return <div>home</div>;
 }
 
 function GameContainer() {
@@ -15,7 +33,8 @@ function GameContainer() {
   return (
     <div className="canvas-container">
       <div className="pos-absolute"> score : {data.score} </div>
-      <Doodlejump />
+      {/* <Doodlejump /> */}
+      fwjeoj
     </div>
   );
 }
