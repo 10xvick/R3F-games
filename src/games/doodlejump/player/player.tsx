@@ -17,7 +17,7 @@ export default function Player() {
     playerdata.jump.active = true;
     playerdata.jump.jumpsteps = 0;
     setActiveFloor(-1);
-  });
+  }); 
 
   useUpdate((state, delta) => {
     const player = { ...playerdata };
