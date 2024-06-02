@@ -8,9 +8,7 @@ const games = [Doodlejump, GameContainer];
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<Home />}>
-        <Route path="/games" element={<Games />}></Route>
-      </Route>
+      <Route path="/" element={<Home />}></Route>
     </Routes>
   );
 }
@@ -18,14 +16,17 @@ function App() {
 function Home() {
   return (
     <>
-      HOMe
+      HOM
       <Link to={"/games"}>games</Link>
+      <Routes>
+        <Route path="games" element={<Games />}></Route>
+      </Routes>
     </>
   );
 }
 
 function Games() {
-  return <div>home</div>;
+  return <div>games</div>;
 }
 
 function GameContainer() {
