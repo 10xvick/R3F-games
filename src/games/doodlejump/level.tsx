@@ -1,11 +1,10 @@
-import { useFrame } from "@react-three/fiber";
 import { game } from "./blueprint/blueprint";
 import Player from "./player/player";
 import { utils } from "../../utils/utils";
 import { useLevelstore } from "./stores/level";
 import Box from "./prefabs/box";
 import { useState } from "react";
-import { useUpdate } from "./game";
+import { useUpdate } from "./customHooks/update";
 
 export function Level() {
   return (

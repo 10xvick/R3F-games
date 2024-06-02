@@ -1,14 +1,15 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useInput } from "../../input/input";
 import { game } from "../blueprint/blueprint";
 import Box from "../prefabs/box";
 import { useLevelstore } from "../stores/level";
 import { utils } from "../../../utils/utils";
-import { useUpdate } from "../game";
 import { useGamestore } from "../stores/game";
+import { usePlayerStore } from "../stores/player";
+import { useUpdate } from "../customHooks/update";
 
 export default function Player() {
-  const [playerdata, setplayerdata] = useState(game.player.initial);
+  const { playerdata, setPlayerdata } = usePlayerStore();
   const { floors, activeFloor, setActiveFloor } = useLevelstore();
   const [xonland, setxonland] = useState(0);
   const { setpause } = useGamestore();
@@ -17,7 +18,7 @@ export default function Player() {
     playerdata.jump.active = true;
     playerdata.jump.jumpsteps = 0;
     setActiveFloor(-1);
-  }); 
+  });
 
   useUpdate((state, delta) => {
     const player = { ...playerdata };
@@ -55,7 +56,7 @@ export default function Player() {
 
     if (player.position.y < -game.level.scale.y + game.player.scale.y / 2)
       setpause(true);
-    setplayerdata({ ...player });
+    setPlayerdata({ ...player });
   });
 
   return (
