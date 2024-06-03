@@ -1,3 +1,4 @@
+import React from "react";
 import { Canvas } from "@react-three/fiber";
 import { Level } from "./level";
 import Box from "./prefabs/box";

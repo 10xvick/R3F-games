@@ -1,14 +1,24 @@
-import { useState } from "react";
 import "./App.css";
 import { Doodlejump } from "./games/doodlejump/game";
-import { BrowserRouter, Link, Route, Routes } from "react-router-dom";
+import { Link, Outlet, Route, Routes } from "react-router-dom";
+import React from "react";
 
-const games = [Doodlejump, GameContainer];
+const games = [Doodlejump];
 
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<Home />}></Route>
+      <Route path="/">
+        <Route index element={<Home />}></Route>
+        <Route path="games">
+          <Route index element={<Games />} />
+          <Route path="" element={<GameContainer />}>
+            {games.map((Game) => (
+              <Route path={Game.name} element={<Game />} />
+            ))}
+          </Route>
+        </Route>
+      </Route>
     </Routes>
   );
 }
@@ -16,26 +26,36 @@ function App() {
 function Home() {
   return (
     <>
-      HOM
-      <Link to={"/games"}>games</Link>
-      <Routes>
-        <Route path="games" element={<Games />}></Route>
-      </Routes>
+      HOME
+      <div>
+        <Link to={"/games"}>games</Link>
+      </div>
     </>
   );
 }
 
 function Games() {
-  return <div>games</div>;
+  return (
+    <div>
+      <div>games</div>
+      <ol>
+        {games.map((game) => (
+          <li>
+            <Link key={game.name} to={game.name}>
+              {game.name}
+            </Link>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
 }
 
 function GameContainer() {
-  const [data, setdata] = useState({ score: 0 });
   return (
     <div className="canvas-container">
-      <div className="pos-absolute"> score : {data.score} </div>
-      {/* <Doodlejump /> */}
-      fwjeoj
+      <div className="pos-absolute"> # </div>
+      <Outlet />
     </div>
   );
 }
