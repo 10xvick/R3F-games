@@ -61,11 +61,12 @@ export default function Player() {
           }
         }
       }
-      player.position.y -= delta * game.gravity;
+        player.position.y -= delta * game.gravity;
     }
 
     if (player.position.y < -game.level.scale.y + game.player.scale.y / 2)
-      setpause(true);
+      setpause(true); 
+    
     setPlayerdata({ ...player });
   });
 
