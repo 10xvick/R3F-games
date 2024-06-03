@@ -1,3 +1,4 @@
+import React from "react";
 import { Vector3 } from "three";
 
 export default function Box({

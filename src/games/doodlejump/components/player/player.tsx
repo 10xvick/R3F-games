@@ -1,21 +1,27 @@
 import { useState } from "react";
-import { useInput } from "../../input/input";
-import { game } from "../blueprint/blueprint";
-import Box from "../prefabs/box";
-import { useLevelstore } from "../stores/level";
-import { utils } from "../../../utils/utils";
-import { useGamestore } from "../stores/game";
-import { usePlayerStore } from "../stores/player";
-import { useUpdate } from "../customHooks/update";
+import { useInput } from "../../../input/input";
+import { game } from "../../blueprint/blueprint";
+import Box from "../../prefabs/box";
+import { useLevelstore } from "../../stores/level";
+import { utils } from "../../../../utils/utils";
+import { useGamestore } from "../../stores/game";
+import { usePlayerStore } from "../../stores/player";
+import { useUpdate } from "../../customHooks/update";
+import React from "react";
 
 export default function Player() {
-  const { playerdata, setPlayerdata } = usePlayerStore();
-  const { setspeed, setscore, speed, score } = useGamestore();
+  const { playerdata, setPlayerdata, resetPlayerdata } = usePlayerStore();
+  const { setspeed, setscore, speed, score, pause, setpause } = useGamestore();
   const { floors, activeFloor, setActiveFloor } = useLevelstore();
   const [xonland, setxonland] = useState(0);
-  const { setpause } = useGamestore();
+
+  function restart() {
+    resetPlayerdata();
+    setpause(false);
+  }
 
   useInput("up", (e) => {
+    if (pause) return restart();
     playerdata.jump.active = true;
     playerdata.jump.jumpsteps = 0;
     setActiveFloor(-1);
@@ -64,11 +70,9 @@ export default function Player() {
   });
 
   return (
-    <>
-      <Box
-        scale={[game.player.scale.x, game.player.scale.y, 10]}
-        position={[playerdata.position.x, playerdata.position.y, 0]}
-      />
-    </>
+    <Box
+      scale={[game.player.scale.x, game.player.scale.y, 10]}
+      position={[playerdata.position.x, playerdata.position.y, 0]}
+    />
   );
 }

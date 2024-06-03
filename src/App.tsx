@@ -1,5 +1,5 @@
 import "./App.css";
-import { Doodlejump } from "./games/doodlejump/game";
+import { Doodlejump } from "./games/doodlejump/components/game/game";
 import { Link, Outlet, Route, Routes } from "react-router-dom";
 import React from "react";
 
@@ -13,8 +13,12 @@ function App() {
         <Route path="games">
           <Route index element={<Games />} />
           <Route path="" element={<GameContainer />}>
-            {games.map((Game) => (
-              <Route path={Game.name} element={<Game />} />
+            {games.map((Component) => (
+              <Route
+                key={Component.name}
+                path={Component.name}
+                element={<Component />}
+              />
             ))}
           </Route>
         </Route>

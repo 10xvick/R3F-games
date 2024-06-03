@@ -1,11 +1,11 @@
-import { game } from "./blueprint/blueprint";
-import Player from "./player/player";
-import { utils } from "../../utils/utils";
-import { useLevelstore } from "./stores/level";
-import Box from "./prefabs/box";
+import Player from "../player/player";
+import { utils } from "../../../../utils/utils";
+import { useLevelstore } from "../../stores/level";
+import Box from "../../prefabs/box";
 import { useState } from "react";
-import { useUpdate } from "./customHooks/update";
-import { useGamestore } from "./stores/game";
+import { useUpdate } from "../../customHooks/update";
+import { useGamestore } from "../../stores/game";
+import React from "react";
 
 export function Level() {
   return (

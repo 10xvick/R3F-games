@@ -1,8 +1,8 @@
 import React from "react";
 import { Canvas } from "@react-three/fiber";
-import { Level } from "./level";
-import Box from "./prefabs/box";
-import { CameraController } from "./camera/camera";
+import { Level } from "../level/level";
+import Box from "../../prefabs/box";
+import { CameraController } from "../camera/camera";
 
 export const Doodlejump = () => {
   return (
