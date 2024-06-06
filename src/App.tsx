@@ -2,8 +2,9 @@ import "./App.css";
 import { Doodlejump } from "./games/doodlejump/components/game/game";
 import { Link, Outlet, Route, Routes } from "react-router-dom";
 import React from "react";
+import ThreejsStarter from "./games/threejs-starter/threejsStarter";
 
-const games = [Doodlejump];
+const games = [Doodlejump, ThreejsStarter];
 
 function App() {
   return (
@@ -57,10 +58,10 @@ function Games() {
 
 function GameContainer() {
   return (
-    <div className="canvas-container">
+    <>
       <div className="pos-absolute"> # </div>
       <Outlet />
-    </div>
+    </>
   );
 }
 

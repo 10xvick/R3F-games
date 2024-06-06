@@ -1,13 +1,8 @@
-.canvas-container {
-  width: auto;
+canvas {
+  background: rgba(21, 255, 0, 0.387);
+  width: 100%;
   height: auto;
   aspect-ratio: 1;
-}
-
-Canvas {
-  background: rgba(21, 255, 0, 0.387);
-  width: 50;
-  height: 50;
 }
 
 .pos-absolute {

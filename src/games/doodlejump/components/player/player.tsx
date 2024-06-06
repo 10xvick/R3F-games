@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useInput } from "../../../input/input";
 import { game } from "../../blueprint/blueprint";
 import Box from "../../prefabs/box";
 import { useLevelstore } from "../../stores/level";
@@ -7,7 +6,7 @@ import { utils } from "../../../../utils/utils";
 import { useGamestore } from "../../stores/game";
 import { usePlayerStore } from "../../stores/player";
 import { useUpdate } from "../../customHooks/update";
-import React from "react";
+import { useInput } from "../../../input/input";
 
 export default function Player() {
   const { playerdata, setPlayerdata, resetPlayerdata } = usePlayerStore();
@@ -61,12 +60,12 @@ export default function Player() {
           }
         }
       }
-        player.position.y -= delta * game.gravity;
+      player.position.y -= delta * game.gravity;
     }
 
     if (player.position.y < -game.level.scale.y + game.player.scale.y / 2)
-      setpause(true); 
-    
+      setpause(true);
+
     setPlayerdata({ ...player });
   });
 
