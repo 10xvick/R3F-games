@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { WebGLRenderer } from "three";
-import { creategame_test1 } from "./game-test1";
+import { creategame_doodlejump } from "./doodlejump";
+import { creategame_test2 } from "./test-2";
 
 export default function ThreejsStarter() {
     const ref = useRef(null!);
@@ -23,7 +24,7 @@ export default function ThreejsStarter() {
 function Game() {
     const renderer = new WebGLRenderer({ alpha: true });
 
-    const game = creategame_test1(renderer);
+    const game = creategame_test2(renderer);
 
     return renderer;
 }
