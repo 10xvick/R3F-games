@@ -1,5 +1,6 @@
 import { BoxGeometry, Mesh, MeshBasicMaterial, PerspectiveCamera, Scene, WebGLRenderer } from "three";
 import { events, utils } from "./utility/utility";
+import { lib } from "./utility/helper_lib";
 
 export function creategame_doodlejump(renderer: WebGLRenderer) {
     initializegameobjects(renderer);
@@ -28,15 +29,11 @@ function logics() {
 
                 const behaviour = {
                     update: () => {
-                        let dir = 1;
-                        const xspeed = utils.number.randomRange(30, 70)
+                        const x_pingpong = lib.behaviour.movement.pingpong(floor.base.position, 'x', utils.number.randomRange(30, 70), 80);
+
                         return (delta: number) => {
                             floor.base.position.y -= delta * d.game.speed;
-                            floor.base.position.x += dir * delta * xspeed;
-                            if (Math.abs(floor.base.position.x) > 50) {
-                                floor.base.position.x = 49 * dir
-                                dir = -1 * dir;
-                            }
+                            x_pingpong(delta)
                             if (floor.base.position.y < -100) {
                                 floor.base.position.y = floor.prev.base.position.y + 50;
 

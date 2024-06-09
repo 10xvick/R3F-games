@@ -1,0 +1,12 @@
+idea 1 : 
+-character digging collectable item. 
+-enemy arives
+-character leaves collectable itme and jumps off the window
+-sliding on a wire connecting window a and b player jumps into the window b
+-if enemy is absent start from 1st step or 2nd step
+
+----loop complete------
+
+-enemy can cut the rope to drop the player 
+-player has to slide to the right size of the rope so that he doesn't hit a wall when falling
+-enemy can throw a bottole or something while escaping

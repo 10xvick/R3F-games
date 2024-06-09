@@ -1,22 +1,43 @@
 export const events = {
-    input: {
-        any: (fn: () => void) => {
-            let keypressed = false;
-            ['keydown', 'touchstart'].forEach((eventType) =>
-                document.addEventListener(eventType, (e) => {
-                    if (!keypressed) {
-                        fn();
-                        keypressed = true;
-                    }
-                })
-            );
-            ['keyup', 'touchend'].forEach((eventType) =>
-                document.addEventListener(eventType, (e) => {
-                    keypressed = false;
-                })
-            );
-        },
 
+    input: ({ left, right, up, any }: any) => {
+
+        let keypressed = false;
+        const keydown = (e: Event) => {
+            if (keypressed) return;
+            keypressed = true;
+            if (e instanceof KeyboardEvent)
+                switch (e.key) {
+                    case 'a': case 'ArrowLeft': {
+                        left && left();
+                        break;
+                    }
+                    case 'd': case 'ArrowRight': {
+                        right && right();
+                        break;
+                    }
+                    case 'w': case 'ArrowUp': {
+                        up && up();
+                        break;
+                    }
+                    default: {
+                        any && any()
+                    }
+                }
+        }
+        const keyup = (e: Event) => {
+            if (!keypressed) return;
+            keypressed = false;
+        }
+
+        ['keydown', 'touchstart'].forEach((eventType) =>
+            document.addEventListener(eventType, (e) => keydown(e))
+        );
+        ['keyup', 'touchend'].forEach((eventType) =>
+            document.addEventListener(eventType, (e) => keyup(e))
+        );
+
+        return keydown
     },
 
     lifecycle: {

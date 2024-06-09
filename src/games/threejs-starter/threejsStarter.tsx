@@ -1,14 +1,14 @@
 import React, { useEffect, useRef } from "react";
 import { WebGLRenderer } from "three";
-import { creategame_doodlejump } from "./doodlejump";
 import { creategame_test2 } from "./test-2";
+import { creategame_doodlejump } from "./doodlejump";
 
 export default function ThreejsStarter() {
     const ref = useRef(null!);
     useEffect(() => {
         const mount: HTMLDivElement = ref.current;
         const renderer = Game();
-        renderer.setSize(200, 200)
+        renderer.setSize(400, 400)
         renderer.domElement.style.width = '100%';
         renderer.domElement.style.height = '100%';
         mount.append(renderer.domElement);
