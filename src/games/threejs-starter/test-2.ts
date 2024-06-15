@@ -1,9 +1,8 @@
 import { BoxGeometry, Mesh, MeshBasicMaterial, PerspectiveCamera, Scene, WebGLRenderer } from "three";
 import { events, utils } from "./utility/utility";
 import TWEEN, { Easing, Tween } from "@tweenjs/tween.js";
-import { lerp } from "three/src/math/MathUtils.js";
-import { ease, tween } from "./utility/lerp";
-import { curvedShaderMaterial, texture } from "./utility/materials";
+import { ease, lerp, tween } from "./utility/lerp";
+import { curvedshadermaterial, texture } from "./utility/materials";
 
 export function creategame_test2(renderer: WebGLRenderer) {
     initializegameobjects(renderer);
@@ -18,8 +17,10 @@ function logics() {
     camera.position.z = 100
     camera.rotation.x = Math.PI / 2.5
     camera.position.y = -120;
+    const curvedShaderMaterial = curvedshadermaterial();
+    d.three.materials.push(curvedShaderMaterial);
 
-    d.three.scene.add(new Mesh(geometry, material));
+    // d.three.scene.add(new Mesh(geometry, material));
 
     const toupdate: Array<(delta: number) => void> = [];
     type inputfn = Array<() => void>
@@ -31,21 +32,21 @@ function logics() {
         action: {},
         generate: {
             obstacle: () => {
-                let obstacle: Obstacle = { base: new Mesh(geometry, new MeshBasicMaterial({ color: 0xff0000 })) };
+                let obstacle: Obstacle = { base: new Mesh(geometry, curvedShaderMaterial.value) };
                 obstacle.base.scale.x = 20 / 100;
                 obstacle.base.scale.y = 20 / 100;
-                obstacle.base.scale.z = 20 / 100;
+                obstacle.base.scale.z = 6000 / 100;
                 obstacle.base.position.x = utils.number.randomRange(-1, 2) * 50 / 100
                 d.three.scene.add(obstacle.base)
                 return obstacle;
             },
             floor: () => {
                 let floor: Floor = {
-                    base: new Mesh(geometry, new MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0.5 })),
+                    base: new Mesh(geometry, curvedShaderMaterial.value),
                     next: null!,
                     prev: null!,
                     obstacle: x.generate.obstacle(),
-                    body: { base: new Mesh(geometry, new MeshBasicMaterial({ color: 0x10ff00, map: texture })) }
+                    body: { base: new Mesh(geometry, new MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0.05 })) }
                 };
                 floor.obstacle.base.parent = floor.base;
                 floor.base.scale.x = 100;
@@ -53,20 +54,29 @@ function logics() {
                 floor.base.scale.z = 2;
                 floor.base.position.x = 0;
                 d.three.scene.add(floor.body.base);
+                floor.base.rotation.y = Math.PI * 90
                 floor.body.base.scale.x = 400 / 100;
                 floor.body.base.scale.y = 100 / 100;
                 floor.body.base.scale.z = 10 / 100;
-                floor.body.base.parent = floor.base
+                floor.body.base.parent = floor.base;
+
+                const tempmesh = new Mesh(geometry, curvedShaderMaterial.value);
+                // d.three.scene.add(tempmesh); 
+                tempmesh.scale.x = 50;
+                tempmesh.scale.y = 50;
+                tempmesh.scale.z = 20;
+                tempmesh.position.z = 50;
+
 
                 const behaviour = {
                     update: () => {
 
                         return (delta: number) => {
+
                             floor.base.position.y -= delta * d.game.speed;
 
                             if (floor.base.position.y < -100) {
                                 floor.base.position.y = floor.prev.base.position.y + 100;
-
                             }
                         }
                     }
@@ -76,7 +86,7 @@ function logics() {
             },
             level: () => {
 
-                for (let i = 1; i < 5; i++) {
+                for (let i = 1; i < d.level.floor.total; i++) {
                     const floor = x.generate.floor();
                     d.level.floors.push(floor);
                     d.three.scene.add(floor.base);
@@ -87,6 +97,19 @@ function logics() {
                     d.level.floors[i].next = d.level.floors[i + 1];
                     d.level.floors[i].prev = d.level.floors[i - 1];
                 }
+
+                // async function updatecurvature() {
+                //     console.log('updating')
+                //     const newpos: any = [];
+                //     const uniforms = curvedShaderMaterial.value.uniforms
+                //     await tween(uniforms.curvx.value, utils.number.randomRange(-4, 4), 1000, val => newpos.push(val));
+                //     await tween(uniforms.curvy.value, utils.number.randomRange(-4, 4), 1000, val => newpos.push(val));
+                //     await tween(uniforms.curvz.value, utils.number.randomRange(-4, 4), 1000, val => newpos.push(val));
+                //     d.three.materials.forEach((e: any) => e.update(...newpos))
+                //     await updatecurvature();
+                // }
+
+                // updatecurvature();
 
                 d.level.floors[0].prev = d.level.floors[d.level.floors.length - 1];
                 d.level.floors[d.level.floors.length - 1].next = d.level.floors[0];
@@ -102,6 +125,7 @@ function logics() {
                 d.player.mesh = mesh;
                 d.three.scene.add(mesh);
                 camera.position.y = -100;
+
 
                 const behaviour = {
                     update: () => {
@@ -186,6 +210,7 @@ const gameobject = {
         renderer: {} as WebGLRenderer,
         scene: new Scene(),
         camera: new PerspectiveCamera(75, 1, 0.1, 10000),
+        materials: [] as Array<any>,
     },
     game: {
         score: 0,
@@ -194,7 +219,15 @@ const gameobject = {
         takeinput: true,
     },
     level: {
-        floors: [] as Floor[]
+        floors: [] as Floor[],
+        floor: {
+            total: 10,
+            curvature: {
+                x: 0,
+                y: 0,
+                z: 0
+            }
+        }
     },
     player: {
         scale: { x: 10, y: 15 },

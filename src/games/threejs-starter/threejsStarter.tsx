@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from "react";
 import { WebGLRenderer } from "three";
 import { creategame_test2 } from "./test-2";
 import { creategame_doodlejump } from "./doodlejump";
+import { shadertest } from "./shadertest";
 
 export default function ThreejsStarter() {
     const ref = useRef(null!);
