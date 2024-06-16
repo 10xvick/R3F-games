@@ -126,11 +126,10 @@ function logics() {
                 mesh.scale.x = d.player.scale.x;
                 mesh.scale.y = d.player.scale.y;
                 mesh.scale.z = 10;
-                mesh.position.y = 0;
-                mesh.position.z = 0;
                 d.player.mesh = mesh;
                 d.three.scene.add(mesh);
                 camera.position.y = -80;
+                mesh.position.z = d.player.base;
 
                 const behaviour = {
                     update: () => {
@@ -141,16 +140,17 @@ function logics() {
                     },
                     move: (dir: number) => {
                         return tween(mesh.position.x,
-                            mesh.position.x + dir * d.level.row.size, 20,
-                            (val) => mesh.position.x = val, ease.cubicIn
-                        ).then(val => mesh.position.x = val)
+                            mesh.position.x + dir * d.level.row.size, 4,
+                            (val) => mesh.position.x = val, ease.bounceOut
+                        )
                     },
                     jump: () => {
-                        return tween(mesh.position.z, 50, 20, (value) => {
+                        const jumpHeight = d.player.base + d.player.jump.height;
+                        return tween(mesh.position.z, jumpHeight, 2, (value) => {
                             mesh.position.z = value;
-                        }, ease.cubicOut).then(() => tween(50, 0, 20, (value) => {
-                            mesh.position.z = value
-                        }, ease.cubicIn))
+                        }, ease.cubicOut).then(() => tween(jumpHeight, d.player.base, 4, (value) => {
+                            mesh.position.z = value;
+                        }, ease.cubicIn));
                     }
                 }
 
@@ -227,7 +227,7 @@ const gameobject = {
         floors: [] as Floor[],
         floor: {
             base: { size: 100 },
-            total: 10,
+            total: 6,
             curvature: {
                 x: 0,
                 y: 0,
@@ -241,12 +241,12 @@ const gameobject = {
     },
     player: {
         scale: { x: 10, y: 10 },
+        base: 10,
         mesh: new Mesh,
         floor: null as Floor | null,
         jump: {
             steps: 0,
-            maxsteps: 14,
-            strength: 20,
+            height: 50
         },
     }
 }

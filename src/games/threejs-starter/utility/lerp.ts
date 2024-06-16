@@ -48,7 +48,6 @@ export const ease = {
 export function lerp(start: number, end: number, t: number): number {
     return start * (1 - t) + end * t;
 }
-
 export async function tween(
     start: number,
     end: number,
@@ -58,28 +57,31 @@ export async function tween(
 ): Promise<number> {
     return new Promise((resolve) => {
         easetype ||= ease.linear;
-        const duration = 1000; // Duration in milliseconds
+        const duration = 100 * steps; // Duration in milliseconds
 
-        let currentTime = 0;
+        let startTime: number | null = null;
 
-        const runAnimation = () => {
-            currentTime += duration / steps;
+        const runAnimation = (currentTime: number) => {
+            if (!startTime) {
+                startTime = currentTime;
+            }
 
-            const progress = Math.min(currentTime / duration, 1);
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
             const easedProgress = easetype!(progress);
             const value = lerp(start, end, easedProgress);
 
+            callback(value);
 
             if (progress < 1) {
-                callback(value);
                 requestAnimationFrame(runAnimation);
             } else {
-                resolve(value);
+                // Ensure the final value is set to the end value
+                callback(end);
+                resolve(end);
             }
         };
 
-        runAnimation();
+        requestAnimationFrame(runAnimation);
     });
 }
-
-
