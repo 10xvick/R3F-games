@@ -63,10 +63,6 @@ function logics() {
                 utils.set.xyz(floor.buildings.right.inner.base.position, 1.2, 0, .5);
                 utils.set.xyz(floor.buildings.right.outer.base.position, 1.2, 0, .5);
 
-                // const tempmesh = new Mesh(geometry, d.level.obstacle.a.material.value);
-                // utils.set.xyz(tempmesh.scale, 20, 20, 20);
-                // tempmesh.position.x = 40;
-
                 d.three.scene.add(floor.base);
                 floor.base.add(floor.ground.base,
                     floor.obstacle.base,
