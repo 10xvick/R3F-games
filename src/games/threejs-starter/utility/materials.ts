@@ -1,8 +1,11 @@
-import { DoubleSide, ShaderMaterial, TextureLoader } from "three";
+import { DoubleSide, ShaderMaterial, Texture, TextureLoader } from "three";
+import { lerp } from "./lerp";
 
 const textureloader = new TextureLoader();
-export const texture = textureloader.load('https://static.vecteezy.com/system/resources/previews/001/339/603/non_2x/stone-brick-wall-seamless-texture-for-jungle-theme-vector.jpg')//'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTnKHTeFEcrSJOf8CKWIGb1gcqD03VJ2n9HSA&s')
-
+export const texture = {
+    floor: textureloader.load('https://static.vecteezy.com/system/resources/previews/025/466/041/original/cartoon-stone-pavement-seamless-pattern-brick-wall-texture-cracked-rock-paver-gray-street-tiles-top-view-vector.jpg'),//'https://static.vecteezy.com/system/resources/previews/001/339/603/non_2x/stone-brick-wall-seamless-texture-for-jungle-theme-vector.jpg'),
+    obstacle: textureloader.load('https://st4.depositphotos.com/6615378/25088/v/450/depositphotos_250885572-stock-illustration-seamless-texture-of-green-stone.jpg')//'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTnKHTeFEcrSJOf8CKWIGb1gcqD03VJ2n9HSA&s')
+}
 
 const shaders = {
     sintexture: {
@@ -120,7 +123,7 @@ const shaders = {
     }
 }
 
-export const curvedshadermaterial = () => {
+export const curvedshadermaterial = (texture: Texture) => {
     const mat = new ShaderMaterial({
         wireframe: false,
         // side: DoubleSide,
@@ -135,11 +138,22 @@ export const curvedshadermaterial = () => {
     })
     return {
         value: mat,
-        updatecurv: (x: number, y: number, z: number) => {
-            mat.uniforms.curvx.value = x as any;
-            mat.uniforms.curvy.value = y as any;
-            mat.uniforms.curvz.value = z as any;
-        }
+        updatecurv: {
+            x: (value: number) => {
+                mat.uniforms.curvx.value = value;
+            },
+            y: (value: number) => {
+                mat.uniforms.curvy.value = value;
+            },
+            z: (value: number) => {
+                mat.uniforms.curvz.value = value;
+            },
+            all: (x: number, y: number, z: number) => {
+                mat.uniforms.curvx.value = x;
+                mat.uniforms.curvx.value = y;
+                mat.uniforms.curvx.value = z;
+            }
+        },
     }
 }
 

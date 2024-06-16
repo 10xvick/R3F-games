@@ -17,8 +17,7 @@ function logics() {
     camera.position.z = 100
     camera.rotation.x = Math.PI / 2.5
     camera.position.y = -120;
-    const curvedShaderMaterial = curvedshadermaterial();
-    d.three.materials.push(curvedShaderMaterial);
+
 
     // d.three.scene.add(new Mesh(geometry, material));
 
@@ -32,47 +31,45 @@ function logics() {
         action: {},
         generate: {
             obstacle: () => {
-                let obstacle: Obstacle = { base: new Mesh(geometry, curvedShaderMaterial.value) };
-                obstacle.base.scale.x = 20 / 100;
-                obstacle.base.scale.y = 20 / 100;
-                obstacle.base.scale.z = 6000 / 100;
-                obstacle.base.position.x = utils.number.randomRange(-1, 2) * 50 / 100
-                d.three.scene.add(obstacle.base)
+                let obstacle: Obstacle = { base: new Mesh(geometry, d.level.obstacle.a.material.value) };
+                utils.set.xyz(obstacle.base.scale, 0.1, 0.1, 1 / 4);
+                utils.set.xyz(obstacle.base.position, utils.number.randomRange(-1, 1) * d.level.row.size / 100, 0, obstacle.base.scale.z / 2.5);
                 return obstacle;
             },
             floor: () => {
                 let floor: Floor = {
-                    base: new Mesh(geometry, curvedShaderMaterial.value),
+                    base: new Mesh(geometry, new MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0.0 })),
                     next: null!,
                     prev: null!,
                     obstacle: x.generate.obstacle(),
-                    body: { base: new Mesh(geometry, new MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0.05 })) }
+                    ground: { base: new Mesh(geometry, d.level.floor.material.value) },
+                    buildings: {
+                        left: {
+                            inner: { base: new Mesh(geometry, d.level.obstacle.a.material.value) },
+                            outer: { base: new Mesh(geometry, d.level.obstacle.a.material.value) }
+                        },
+                        right: {
+                            inner: { base: new Mesh(geometry, d.level.obstacle.a.material.value) },
+                            outer: { base: new Mesh(geometry, d.level.obstacle.a.material.value) }
+                        }
+                    }
                 };
-                floor.obstacle.base.parent = floor.base;
-                floor.base.scale.x = 100;
-                floor.base.scale.y = 100;
-                floor.base.scale.z = 2;
-                floor.base.position.x = 0;
-                d.three.scene.add(floor.body.base);
-                floor.base.rotation.y = Math.PI * 90
-                floor.body.base.scale.x = 400 / 100;
-                floor.body.base.scale.y = 100 / 100;
-                floor.body.base.scale.z = 10 / 100;
-                floor.body.base.parent = floor.base;
 
-                const tempmesh = new Mesh(geometry, curvedShaderMaterial.value);
-                // d.three.scene.add(tempmesh); 
-                tempmesh.scale.x = 50;
-                tempmesh.scale.y = 50;
-                tempmesh.scale.z = 20;
-                tempmesh.position.z = 50;
+                utils.set.xyz(floor.base.scale, 100, 100, 100);
+                utils.set.xyz(floor.ground.base.scale, 2, 1, 1 / 100);
+                utils.set.xyz(floor.buildings.left.inner.base.position, -1.2, 0, .5);
+                utils.set.xyz(floor.buildings.left.outer.base.position, -1.2, 0, .5);
+                utils.set.xyz(floor.buildings.right.inner.base.position, 1.2, 0, .5);
+                utils.set.xyz(floor.buildings.right.outer.base.position, 1.2, 0, .5);
+
+                d.three.scene.add(floor.base);
+                floor.base.add(floor.ground.base, floor.obstacle.base, floor.buildings.left.inner.base, floor.buildings.left.inner.base, floor.buildings.right.outer.base, floor.buildings.right.inner.base);
 
 
                 const behaviour = {
                     update: () => {
 
                         return (delta: number) => {
-
                             floor.base.position.y -= delta * d.game.speed;
 
                             if (floor.base.position.y < -100) {
@@ -89,7 +86,6 @@ function logics() {
                 for (let i = 1; i < d.level.floor.total; i++) {
                     const floor = x.generate.floor();
                     d.level.floors.push(floor);
-                    d.three.scene.add(floor.base);
                     floor.base.position.y = 100 * i - 150;
                 }
 
@@ -98,18 +94,21 @@ function logics() {
                     d.level.floors[i].prev = d.level.floors[i - 1];
                 }
 
-                // async function updatecurvature() {
-                //     console.log('updating')
-                //     const newpos: any = [];
-                //     const uniforms = curvedShaderMaterial.value.uniforms
-                //     await tween(uniforms.curvx.value, utils.number.randomRange(-4, 4), 1000, val => newpos.push(val));
-                //     await tween(uniforms.curvy.value, utils.number.randomRange(-4, 4), 1000, val => newpos.push(val));
-                //     await tween(uniforms.curvz.value, utils.number.randomRange(-4, 4), 1000, val => newpos.push(val));
-                //     d.three.materials.forEach((e: any) => e.update(...newpos))
-                //     await updatecurvature();
-                // }
+                function updatecurvature() {
+                    console.log('xyz')
+                    const uniforms = d.level.floor.material.value.uniforms;
+                    const getrandom = () => utils.number.randomRange(-2, 2);
 
-                // updatecurvature();
+                    Promise.all(
+                        [tween(uniforms.curvx.value, getrandom(), 1000, (val) => {
+                            d.three.materials.forEach(e => e.updatecurv.x(val))
+                        }), tween(uniforms.curvz.value, getrandom(), 1000, (val) => {
+                            d.three.materials.forEach(e => e.updatecurv.z(val))
+                        })
+                        ]).then(() => updatecurvature())
+                }
+
+                updatecurvature();
 
                 d.level.floors[0].prev = d.level.floors[d.level.floors.length - 1];
                 d.level.floors[d.level.floors.length - 1].next = d.level.floors[0];
@@ -121,11 +120,11 @@ function logics() {
                 mesh.scale.x = d.player.scale.x;
                 mesh.scale.y = d.player.scale.y;
                 mesh.scale.z = 10;
-                mesh.position.y = -30;
+                mesh.position.y = 0;
+                mesh.position.z = 0;
                 d.player.mesh = mesh;
                 d.three.scene.add(mesh);
-                camera.position.y = -100;
-
+                camera.position.y = -80;
 
                 const behaviour = {
                     update: () => {
@@ -136,15 +135,15 @@ function logics() {
                     },
                     move: (dir: number) => {
                         return tween(mesh.position.x,
-                            mesh.position.x + dir * 50, 50,
+                            mesh.position.x + dir * d.level.row.size, 20,
                             (val) => mesh.position.x = val,
                             ease.backIn
                         )
                     },
                     jump: () => {
-                        return tween(mesh.position.z, 50, 50, (value) => {
+                        return tween(mesh.position.z, 50, 20, (value) => {
                             mesh.position.z = value;
-                        }, ease.cubicOut).then(() => tween(50, 0, 50, (value) => {
+                        }, ease.cubicOut).then(() => tween(50, 0, 20, (value) => {
                             mesh.position.z = value
                         }, ease.cubicIn))
                     }
@@ -219,6 +218,7 @@ const gameobject = {
         takeinput: true,
     },
     level: {
+        row: { size: 40 },
         floors: [] as Floor[],
         floor: {
             total: 10,
@@ -226,6 +226,10 @@ const gameobject = {
                 x: 0,
                 y: 0,
                 z: 0
+            }, material: curvedshadermaterial(texture.floor),
+        }, obstacle: {
+            a: {
+                material: curvedshadermaterial(texture.obstacle)
             }
         }
     },
@@ -243,6 +247,7 @@ const gameobject = {
 
 function initializegameobjects(renderer: WebGLRenderer) {
     gameobject.three.renderer = renderer;
+    gameobject.three.materials.push(gameobject.level.floor.material, gameobject.level.obstacle.a.material)
 }
 
 
@@ -253,7 +258,17 @@ interface Floor extends MeshObject {
     next: Floor,
     prev: Floor,
     obstacle: Obstacle,
-    body: MeshObject
+    ground: MeshObject,
+    buildings: {
+        left: {
+            outer: MeshObject,
+            inner: MeshObject,
+        },
+        right: {
+            outer: MeshObject,
+            inner: MeshObject,
+        }
+    }
 }
 
 interface Obstacle extends MeshObject {

@@ -80,7 +80,7 @@ export const events = {
 export const utils = {
     number: {
         randomRange(min: number, max: number) {
-            return min + Math.floor(Math.random() * (max - min));
+            return min + Math.floor(Math.random() * (max - min + 1));
         },
     },
     collision: {
@@ -96,4 +96,11 @@ export const utils = {
                 b.position.y - b.scale.y / 2 - a.position.y + a.scale.y / 2 < 1,
         },
     },
+    set: {
+        xyz: (obj: any, x: number, y: number, z: number) => {
+            if (x != undefined) obj.x = x;
+            if (y != undefined) obj.y = y;
+            if (z != undefined) obj.z = z;
+        }
+    }
 };

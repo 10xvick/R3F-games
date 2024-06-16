@@ -55,8 +55,8 @@ export async function tween(
     steps: number,
     callback: (value: number) => void,
     easetype?: (x: number) => number
-): Promise<void> {
-    return new Promise<void>((resolve) => {
+): Promise<number> {
+    return new Promise((resolve) => {
         easetype ||= ease.linear;
         const duration = 1000; // Duration in milliseconds
 
@@ -69,12 +69,12 @@ export async function tween(
             const easedProgress = easetype!(progress);
             const value = lerp(start, end, easedProgress);
 
-            callback(value);
 
             if (progress < 1) {
+                callback(value);
                 requestAnimationFrame(runAnimation);
             } else {
-                resolve();
+                resolve(value);
             }
         };
 
