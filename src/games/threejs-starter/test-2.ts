@@ -34,6 +34,7 @@ function logics() {
                 let obstacle: Obstacle = { base: new Mesh(geometry, d.level.obstacle.a.material.value) };
                 utils.set.xyz(obstacle.base.scale, 0.1, 0.1, 1 / 4);
                 utils.set.xyz(obstacle.base.position, utils.number.randomRange(-1, 1) * d.level.row.size / 100, 0, obstacle.base.scale.z / 2.5);
+                console.log(obstacle.base.position.x);
                 return obstacle;
             },
             floor: () => {
@@ -55,26 +56,35 @@ function logics() {
                     }
                 };
 
-                utils.set.xyz(floor.base.scale, 100, 100, 100);
-                utils.set.xyz(floor.ground.base.scale, 2, 1, 1 / 100);
+                utils.set.xyz(floor.base.scale, d.level.floor.base.size, d.level.floor.base.size, d.level.floor.base.size);
+                utils.set.xyz(floor.ground.base.scale, 2, 1, 1 / d.level.floor.base.size);
                 utils.set.xyz(floor.buildings.left.inner.base.position, -1.2, 0, .5);
                 utils.set.xyz(floor.buildings.left.outer.base.position, -1.2, 0, .5);
                 utils.set.xyz(floor.buildings.right.inner.base.position, 1.2, 0, .5);
                 utils.set.xyz(floor.buildings.right.outer.base.position, 1.2, 0, .5);
 
-                d.three.scene.add(floor.base);
-                floor.base.add(floor.ground.base, floor.obstacle.base, floor.buildings.left.inner.base, floor.buildings.left.inner.base, floor.buildings.right.outer.base, floor.buildings.right.inner.base);
+                // const tempmesh = new Mesh(geometry, d.level.obstacle.a.material.value);
+                // utils.set.xyz(tempmesh.scale, 20, 20, 20);
+                // tempmesh.position.x = 40;
 
+                d.three.scene.add(floor.base);
+                floor.base.add(floor.ground.base,
+                    floor.obstacle.base,
+                    floor.buildings.left.inner.base,
+                    floor.buildings.left.inner.base,
+                    floor.buildings.right.outer.base,
+                    floor.buildings.right.inner.base,
+                );
 
                 const behaviour = {
                     update: () => {
 
                         return (delta: number) => {
-                            floor.base.position.y -= delta * d.game.speed;
 
                             if (floor.base.position.y < -100) {
                                 floor.base.position.y = floor.prev.base.position.y + 100;
-                            }
+                            } else
+                                floor.base.position.y -= delta * d.game.speed;
                         }
                     }
                 }
@@ -136,9 +146,8 @@ function logics() {
                     move: (dir: number) => {
                         return tween(mesh.position.x,
                             mesh.position.x + dir * d.level.row.size, 20,
-                            (val) => mesh.position.x = val,
-                            ease.backIn
-                        )
+                            (val) => mesh.position.x = val, ease.cubicIn
+                        ).then(val => mesh.position.x = val)
                     },
                     jump: () => {
                         return tween(mesh.position.z, 50, 20, (value) => {
@@ -221,6 +230,7 @@ const gameobject = {
         row: { size: 40 },
         floors: [] as Floor[],
         floor: {
+            base: { size: 100 },
             total: 10,
             curvature: {
                 x: 0,
@@ -234,7 +244,7 @@ const gameobject = {
         }
     },
     player: {
-        scale: { x: 10, y: 15 },
+        scale: { x: 10, y: 10 },
         mesh: new Mesh,
         floor: null as Floor | null,
         jump: {
