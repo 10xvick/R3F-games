@@ -34,7 +34,6 @@ function logics() {
                 let obstacle: Obstacle = { base: new Mesh(geometry, d.level.obstacle.a.material.value) };
                 utils.set.xyz(obstacle.base.scale, 0.1, 0.1, 1 / 4);
                 utils.set.xyz(obstacle.base.position, utils.number.randomRange(-1, 1) * d.level.row.size / 100, 0, obstacle.base.scale.z / 2.5);
-                console.log(obstacle.base.position.x);
                 return obstacle;
             },
             floor: () => {
@@ -76,11 +75,9 @@ function logics() {
                     update: () => {
 
                         return (delta: number) => {
-
-                            if (floor.base.position.y < -100) {
-                                floor.base.position.y = floor.prev.base.position.y + 100;
-                            } else
-                                floor.base.position.y -= delta * d.game.speed;
+                            if (floor.base.position.y < - floor.base.scale.y) {
+                                floor.base.position.y = floor.prev.base.position.y + floor.prev.base.scale.y;
+                            }
                         }
                     }
                 }
@@ -92,7 +89,6 @@ function logics() {
                 for (let i = 1; i < d.level.floor.total; i++) {
                     const floor = x.generate.floor();
                     d.level.floors.push(floor);
-                    floor.base.position.y = 100 * i - 150;
                 }
 
                 for (let i = 0; i < d.level.floors.length; i++) {
@@ -101,14 +97,13 @@ function logics() {
                 }
 
                 function updatecurvature() {
-                    console.log('xyz')
                     const uniforms = d.level.floor.material.value.uniforms;
                     const getrandom = () => utils.number.randomRange(-2, 2);
-
+                    const steps = 10000 / d.game.speed;
                     Promise.all(
-                        [tween(uniforms.curvx.value, getrandom(), 1000, (val) => {
+                        [tween(uniforms.curvx.value, getrandom(), steps, (val) => {
                             d.three.materials.forEach(e => e.updatecurv.x(val))
-                        }), tween(uniforms.curvz.value, getrandom(), 1000, (val) => {
+                        }), tween(uniforms.curvz.value, getrandom(), steps, (val) => {
                             d.three.materials.forEach(e => e.updatecurv.z(val))
                         })
                         ]).then(() => updatecurvature())
@@ -118,7 +113,6 @@ function logics() {
 
                 d.level.floors[0].prev = d.level.floors[d.level.floors.length - 1];
                 d.level.floors[d.level.floors.length - 1].next = d.level.floors[0];
-                d.level.floors = d.level.floors;
                 return d.level;
             },
             player: () => {
@@ -134,8 +128,9 @@ function logics() {
                 const behaviour = {
                     update: () => {
                         return (delta: number) => {
-                            d.three.camera.position.z = lerp(d.three.camera.position.z, d.player.mesh.position.z + 50, 0.1)
-                            d.three.camera.position.x = lerp(d.three.camera.position.x, d.player.mesh.position.x, 0.1)
+                            d.three.camera.position.z = lerp(d.three.camera.position.z, d.player.mesh.position.z + 50, 0.1);
+                            d.three.camera.position.x = lerp(d.three.camera.position.x, d.player.mesh.position.x, 0.1);
+                            d.level.floors.forEach(floor => floor.base.position.y -= delta * d.game.speed);
                         }
                     },
                     move: (dir: number) => {
@@ -158,7 +153,6 @@ function logics() {
                     return () => {
                         if (d.game.takeinput) {
                             d.game.takeinput = false;
-                            console.log(d.game.takeinput)
                             fn().then(() => d.game.takeinput = true);
                         }
                     }
@@ -175,19 +169,15 @@ function logics() {
         events: {
             input: {
                 action: () => {
-                    // console.log('input');
                     // toinput.forEach(fn => fn())
                 },
                 left: () => {
-                    console.log('left')
                     toinput.left.forEach(fn => fn());
                 },
                 right: () => {
-                    console.log('right')
                     toinput.right.forEach(fn => fn());
                 },
                 up: () => {
-                    console.log('up')
                     toinput.up.forEach(fn => fn())
                 }
             },
@@ -218,7 +208,7 @@ const gameobject = {
     },
     game: {
         score: 0,
-        speed: 60,
+        speed: 60 * 4,
         gravity: 150,
         takeinput: true,
     },
