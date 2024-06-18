@@ -3,6 +3,7 @@ import { events, utils } from "./utility/utility";
 import TWEEN, { Easing, Tween } from "@tweenjs/tween.js";
 import { ease, lerp, tween } from "./utility/lerp";
 import { curvedshadermaterial, texture } from "./utility/materials";
+import { meshlib } from "./meshes";
 
 export function creategame_test2(renderer: WebGLRenderer) {
     initializegameobjects(renderer);
@@ -43,32 +44,18 @@ function logics() {
                     prev: null!,
                     obstacle: x.generate.obstacle(),
                     ground: { base: new Mesh(geometry, d.level.floor.material.value) },
-                    buildings: {
-                        left: {
-                            inner: { base: new Mesh(geometry, d.level.obstacle.a.material.value) },
-                            outer: { base: new Mesh(geometry, d.level.obstacle.a.material.value) }
-                        },
-                        right: {
-                            inner: { base: new Mesh(geometry, d.level.obstacle.a.material.value) },
-                            outer: { base: new Mesh(geometry, d.level.obstacle.a.material.value) }
-                        }
-                    }
+
                 };
 
                 utils.set.xyz(floor.base.scale, d.level.floor.base.size, d.level.floor.base.size, d.level.floor.base.size);
                 utils.set.xyz(floor.ground.base.scale, 2, 1, 1 / d.level.floor.base.size);
-                utils.set.xyz(floor.buildings.left.inner.base.position, -1.2, 0, .5);
-                utils.set.xyz(floor.buildings.left.outer.base.position, -1.2, 0, .5);
-                utils.set.xyz(floor.buildings.right.inner.base.position, 1.2, 0, .5);
-                utils.set.xyz(floor.buildings.right.outer.base.position, 1.2, 0, .5);
+
+                const buildings = meshlib.buildings();
+                d.three.materials.push(buildings.material);
 
                 d.three.scene.add(floor.base);
                 floor.base.add(floor.ground.base,
-                    floor.obstacle.base,
-                    floor.buildings.left.inner.base,
-                    floor.buildings.left.inner.base,
-                    floor.buildings.right.outer.base,
-                    floor.buildings.right.inner.base,
+                    floor.obstacle.base, ...Object.values(buildings.mesh).map(e => e.base)
                 );
 
                 const behaviour = {
@@ -255,16 +242,6 @@ interface Floor extends MeshObject {
     prev: Floor,
     obstacle: Obstacle,
     ground: MeshObject,
-    buildings: {
-        left: {
-            outer: MeshObject,
-            inner: MeshObject,
-        },
-        right: {
-            outer: MeshObject,
-            inner: MeshObject,
-        }
-    }
 }
 
 interface Obstacle extends MeshObject {
