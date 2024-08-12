@@ -10,7 +10,7 @@ export function creategame_test2(renderer: WebGLRenderer, setstats: () => void) 
     return logics(setstats);
 }
 
-function logics(setstats) {
+function logics(setstats: (x: string) => void) {
     const d = gameobject;
     const geometry = new BoxGeometry();
     const material = new MeshBasicMaterial({ color: 0x00ff00 });
