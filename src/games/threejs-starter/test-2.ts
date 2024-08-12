@@ -5,12 +5,12 @@ import { ease, lerp, tween } from "./utility/lerp";
 import { curvedshadermaterial, texture } from "./utility/materials";
 import { meshlib } from "./meshes";
 
-export function creategame_test2(renderer: WebGLRenderer) {
+export function creategame_test2(renderer: WebGLRenderer, setstats: () => void) {
     initializegameobjects(renderer);
-    return logics();
+    return logics(setstats);
 }
 
-function logics() {
+function logics(setstats) {
     const d = gameobject;
     const geometry = new BoxGeometry();
     const material = new MeshBasicMaterial({ color: 0x00ff00 });
@@ -28,13 +28,36 @@ function logics() {
         any: [] as inputfn, left: [] as inputfn, right: [] as inputfn, up: [] as inputfn
     }
 
+    // const col = (a, b) => {
+    //     return (a.position.x == b.position.x && a.position.y == b.position.y)
+    // }
+
     const x = {
-        action: {},
+        action: {
+            collision: {
+                player_obstacle: () => {
+                    d.level.obstacle.container.forEach(e => {
+                        // console.log(d.level.obstacle.container[0].base.position)
+                        // if (utils.collision.rect2rect.basic(d.player.mesh, utils.transform.localtoglobal(e.base, e.base.parent))) {
+                        //     console.log('collision')
+                        // }
+                    })
+                }
+            },
+            gameover: () => {
+
+            },
+            updatescore: () => {
+                d.game.score++;
+                setstats('xxxscore:' + Math.floor(d.game.score / 10))
+            }
+        },
         generate: {
             obstacle: () => {
                 let obstacle: Obstacle = { base: new Mesh(geometry, d.level.obstacle.a.material.value) };
                 utils.set.xyz(obstacle.base.scale, 0.1, 0.1, 1 / 4);
                 utils.set.xyz(obstacle.base.position, utils.number.randomRange(-1, 1) * d.level.row.size / 100, 0, obstacle.base.scale.z / 2.5);
+                d.level.obstacle.container.push(obstacle)
                 return obstacle;
             },
             floor: () => {
@@ -64,6 +87,8 @@ function logics() {
                         return (delta: number) => {
                             if (floor.base.position.y < - floor.base.scale.y) {
                                 floor.base.position.y = floor.prev.base.position.y + floor.prev.base.scale.y;
+
+                                x.action.updatescore();
                             }
                         }
                     }
@@ -178,6 +203,7 @@ function logics() {
         }
     }
 
+    toupdate.push(x.action.collision.player_obstacle)
     x.generate.level();
     x.generate.player();
     events.input({ left: x.events.input.left, right: x.events.input.right, up: x.events.input.up });
@@ -195,7 +221,7 @@ const gameobject = {
     },
     game: {
         score: 0,
-        speed: 60 * 4,
+        speed: 60 * 4 / 2,
         gravity: 150,
         takeinput: true,
     },
@@ -213,7 +239,8 @@ const gameobject = {
         }, obstacle: {
             a: {
                 material: curvedshadermaterial(texture.obstacle)
-            }
+            },
+            container: [] as Array<Obstacle>
         }
     },
     player: {

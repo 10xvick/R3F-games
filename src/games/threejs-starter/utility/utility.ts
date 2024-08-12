@@ -102,5 +102,17 @@ export const utils = {
             if (y != undefined) obj.y = y;
             if (z != undefined) obj.z = z;
         }
+    },
+    transform: {
+        localtoglobal: (a, b) => {
+            const ap = a.position;
+            const bp = b.position;
+            const ax = a.scale;
+            const bx = b.scale;
+            return {
+                position: { x: ap.x + bp.x, y: ap.y + bp.y, z: ap.z + bp.z },
+                scale: { x: 1, y: 1, z: 1 } || { x: ax.x + bx.x, y: ax.y + bx.y, z: ax.z + bx.z }
+            }
+        }
     }
 };
