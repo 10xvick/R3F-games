@@ -1,4 +1,4 @@
-import { BoxGeometry, Mesh, MeshBasicMaterial, PerspectiveCamera, Scene, WebGLRenderer } from "three";
+import { Box3, BoxGeometry, Mesh, MeshBasicMaterial, PerspectiveCamera, Scene, WebGLRenderer } from "three";
 import { events, utils } from "./utility/utility";
 import TWEEN, { Easing, Tween } from "@tweenjs/tween.js";
 import { ease, lerp, tween } from "./utility/lerp";
@@ -28,24 +28,24 @@ function logics(setstats: (x: string) => void) {
         any: [] as inputfn, left: [] as inputfn, right: [] as inputfn, up: [] as inputfn
     }
 
-    // const col = (a, b) => {
-    //     return (a.position.x == b.position.x && a.position.y == b.position.y)
-    // }
-
     const x = {
         action: {
             collision: {
                 player_obstacle: () => {
                     d.level.obstacle.container.forEach(e => {
-                        // console.log(d.level.obstacle.container[0].base.position)
-                        // if (utils.collision.rect2rect.basic(d.player.mesh, utils.transform.localtoglobal(e.base, e.base.parent))) {
-                        //     console.log('collision')
-                        // }
-                    })
+                        const playerBoundingBox = new Box3().setFromObject(d.player.mesh);
+                        const obstacleBoundingBox = new Box3().setFromObject(e.base);
+
+                        if (playerBoundingBox.intersectsBox(obstacleBoundingBox)) {
+                            console.log('Collision detected!');
+                            x.action.gameover();
+                            // Handle collision logic here, e.g., reduce player health, end game, etc.
+                        }
+                    });
                 }
             },
             gameover: () => {
-
+                d.game.over = true;
             },
             updatescore: () => {
                 d.game.score++;
@@ -112,11 +112,14 @@ function logics(setstats: (x: string) => void) {
                     const uniforms = d.level.floor.material.value.uniforms;
                     const getrandom = () => utils.number.randomRange(-2, 2);
                     const steps = 10000 / d.game.speed;
+
                     Promise.all(
                         [tween(uniforms.curvx.value, getrandom(), steps, (val) => {
-                            d.three.materials.forEach(e => e.updatecurv.x(val))
+                            if (!d.game.over)
+                                d.three.materials.forEach(e => e.updatecurv.x(val))
                         }), tween(uniforms.curvz.value, getrandom(), steps, (val) => {
-                            d.three.materials.forEach(e => e.updatecurv.z(val))
+                            if (!d.game.over)
+                                d.three.materials.forEach(e => e.updatecurv.z(val))
                         })
                         ]).then(() => updatecurvature())
                 }
@@ -196,7 +199,7 @@ function logics(setstats: (x: string) => void) {
             lifecycle: {
                 update: (delta: number) => {
                     TWEEN.update()
-                    toupdate.forEach(fn => fn(delta));
+                    if (!d.game.over) toupdate.forEach(fn => fn(delta));
                     d.three.renderer.render(d.three.scene, d.three.camera);
                 }
             }
@@ -224,6 +227,7 @@ const gameobject = {
         speed: 60 * 4 / 2,
         gravity: 150,
         takeinput: true,
+        over: false
     },
     level: {
         row: { size: 40 },

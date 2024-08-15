@@ -25,7 +25,7 @@ export default function ThreejsStarter() {
     </>
 }
 
-function Game(setstats) {
+function Game(setstats: any) {
     const renderer = new WebGLRenderer({ alpha: true });
 
     const game = creategame_test2(renderer, setstats);
