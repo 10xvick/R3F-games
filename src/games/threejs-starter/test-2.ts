@@ -5,58 +5,91 @@ import { ease, lerp, tween } from "./utility/lerp";
 import { curvedshadermaterial, texture } from "./utility/materials";
 import { meshlib } from "./meshes";
 
-export function creategame_test2(renderer: WebGLRenderer, setstats: () => void) {
-    initializegameobjects(renderer);
-    return logics(setstats);
-}
+const instanceid = Math.abs(Math.random() * 1000)
 
-function logics(setstats: (x: string) => void) {
+export function creategame_test2(renderer: WebGLRenderer, setters: Array<() => void>) {
+    gameobject.three.renderer = renderer;
+    return logics(setters);
+}
+type inputfn = Array<() => void>
+
+function logics(setters: Array<(x: string) => void>) {
+    // console.log('restart', gameobject)
+    const [setstats, setgameover]: any = setters
     const d = gameobject;
     const geometry = new BoxGeometry();
     const material = new MeshBasicMaterial({ color: 0x00ff00 });
-    const { camera } = d.three;
-    camera.position.z = 100
-    camera.rotation.x = Math.PI / 2.5
-    camera.position.y = -120;
-
 
     // d.three.scene.add(new Mesh(geometry, material));
 
-    const toupdate: Array<(delta: number) => void> = [];
-    type inputfn = Array<() => void>
-    const toinput = {
-        any: [] as inputfn, left: [] as inputfn, right: [] as inputfn, up: [] as inputfn
-    }
+
 
     const x = {
         action: {
             collision: {
                 player_obstacle: () => {
-                    d.level.obstacle.container.forEach(e => {
-                        const playerBoundingBox = new Box3().setFromObject(d.player.mesh);
-                        const obstacleBoundingBox = new Box3().setFromObject(e.base);
+                    if (!d.player.invincible)
+                        d.level.obstacle.container.forEach(e => {
+                            const playerBoundingBox = new Box3().setFromObject(d.player.mesh);
+                            const obstacleBoundingBox = new Box3().setFromObject(e.base);
 
-                        if (playerBoundingBox.intersectsBox(obstacleBoundingBox)) {
-                            console.log('Collision detected!');
-                            x.action.gameover();
-                            // Handle collision logic here, e.g., reduce player health, end game, etc.
-                        }
-                    });
+                            if (playerBoundingBox.intersectsBox(obstacleBoundingBox)) {
+                                console.log('Collision detected!');
+                                x.action.gameover();
+                            }
+                        });
                 }
             },
             gameover: () => {
                 d.game.over = true;
+                d.game.loop?.stop();
+                setgameover(true);
+            },
+            restart: () => {
+                console.log('restart')
+                d.three.scene.clear();
+                initializegameobjects(d.three.renderer);
+
+                d.game.to.update = [];
+                d.level.floors = [];
+                d.level.obstacle.container = [];
+                x.generate.level();
+                d.game.to.input = {
+                    any: [], left: [], right: [], up: []
+                }
+                x.generate.player();
+                d.game.loop = events.lifecycle.createRenderLoop(40);
+                d.game.loop.start((delta: number) => x.events.lifecycle.update(delta));
+
+                d.player.invincible = true;
+                setTimeout(() => {
+                    d.player.invincible = false;
+                }, 4000);
+                d.game.to.update.push(x.action.collision.player_obstacle)
+                console.log('invincible for 4 seconds');
+
+                d.game.over = false;
+                d.game.score = 0;
+                d.game.speed = 60 * 4 / 2;
+                setgameover(false);
             },
             updatescore: () => {
                 d.game.score++;
                 setstats('xxxscore:' + Math.floor(d.game.score / 10))
+            },
+            updatespeed: () => {
+                d.game.speed += 1;
             }
         },
         generate: {
             obstacle: () => {
-                let obstacle: Obstacle = { base: new Mesh(geometry, d.level.obstacle.a.material.value) };
-                utils.set.xyz(obstacle.base.scale, 0.1, 0.1, 1 / 4);
-                utils.set.xyz(obstacle.base.position, utils.number.randomRange(-1, 1) * d.level.row.size / 100, 0, obstacle.base.scale.z / 2.5);
+                let obstacle: Obstacle = { base: new Mesh(geometry, d.level.obstacle.a.material.value), rearrange: () => { } };
+                obstacle.rearrange = () => {
+                    utils.set.xyz(obstacle.base.scale, 0.1, 0.1, 1 / 4);
+                    utils.set.xyz(obstacle.base.position, utils.number.randomRange(-1, 1) * d.level.row.size / 100, 0, obstacle.base.scale.z / 2.5);
+                }
+
+                // obstacle.rearrange();
                 d.level.obstacle.container.push(obstacle)
                 return obstacle;
             },
@@ -83,17 +116,17 @@ function logics(setstats: (x: string) => void) {
 
                 const behaviour = {
                     update: () => {
-
                         return (delta: number) => {
                             if (floor.base.position.y < - floor.base.scale.y) {
                                 floor.base.position.y = floor.prev.base.position.y + floor.prev.base.scale.y;
-
+                                floor.obstacle.rearrange();
                                 x.action.updatescore();
+                                x.action.updatespeed();
                             }
                         }
                     }
                 }
-                toupdate.push(behaviour.update());
+                d.game.to.update.push(behaviour.update());
                 return floor
             },
             level: () => {
@@ -108,6 +141,7 @@ function logics(setstats: (x: string) => void) {
                     d.level.floors[i].prev = d.level.floors[i - 1];
                 }
 
+                // move it to separate section 
                 function updatecurvature() {
                     const uniforms = d.level.floor.material.value.uniforms;
                     const getrandom = () => utils.number.randomRange(-2, 2);
@@ -137,8 +171,11 @@ function logics(setstats: (x: string) => void) {
                 mesh.scale.z = 10;
                 d.player.mesh = mesh;
                 d.three.scene.add(mesh);
-                camera.position.y = -80;
+                d.three.camera.position.z = 100;
+                d.three.camera.rotation.x = Math.PI / 2.5;
+                d.three.camera.position.y = -80;
                 mesh.position.z = d.player.base;
+                d.player.invincible = true;
 
                 const behaviour = {
                     update: () => {
@@ -173,11 +210,10 @@ function logics(setstats: (x: string) => void) {
                     }
                 }
 
-                toupdate.push(behaviour.update());
-                toinput.left.push(inputsafe(() => behaviour.move(-1)));
-                toinput.right.push(inputsafe(() => behaviour.move(1)));
-                toinput.up.push(inputsafe(() => behaviour.jump()));
-
+                d.game.to.update.push(behaviour.update());
+                d.game.to.input.left.push(inputsafe(() => behaviour.move(-1)));
+                d.game.to.input.right.push(inputsafe(() => behaviour.move(1)));
+                d.game.to.input.up.push(inputsafe(() => behaviour.jump()));
                 return mesh;
             }
         },
@@ -187,30 +223,30 @@ function logics(setstats: (x: string) => void) {
                     // toinput.forEach(fn => fn())
                 },
                 left: () => {
-                    toinput.left.forEach(fn => fn());
+                    d.game.to.input.left.forEach(fn => fn());
                 },
                 right: () => {
-                    toinput.right.forEach(fn => fn());
+                    d.game.to.input.right.forEach(fn => fn());
                 },
                 up: () => {
-                    toinput.up.forEach(fn => fn())
+                    d.game.to.input.up.forEach(fn => fn())
                 }
             },
             lifecycle: {
                 update: (delta: number) => {
                     TWEEN.update()
-                    if (!d.game.over) toupdate.forEach(fn => fn(delta));
+                    if (!d.game.over) d.game.to.update.forEach(fn => fn(delta));
                     d.three.renderer.render(d.three.scene, d.three.camera);
+
+                    // console.log(d.player.mesh.position.x)
                 }
             }
         }
     }
 
-    toupdate.push(x.action.collision.player_obstacle)
-    x.generate.level();
-    x.generate.player();
+
+    // x.action.restart();
     events.input({ left: x.events.input.left, right: x.events.input.right, up: x.events.input.up });
-    events.lifecycle.createRenderLoop(40)((delta) => x.events.lifecycle.update(delta))
     return x;
 }
 
@@ -227,7 +263,14 @@ const gameobject = {
         speed: 60 * 4 / 2,
         gravity: 150,
         takeinput: true,
-        over: false
+        over: false,
+        loop: null! as any,
+        to: {
+            update: [] as Array<(delta: number) => void>,
+            input: {
+                any: [] as inputfn, left: [] as inputfn, right: [] as inputfn, up: [] as inputfn
+            }
+        }
     },
     level: {
         row: { size: 40 },
@@ -250,18 +293,19 @@ const gameobject = {
     player: {
         scale: { x: 10, y: 10 },
         base: 10,
-        mesh: new Mesh,
+        mesh: null! as Mesh,
         floor: null as Floor | null,
         jump: {
             steps: 0,
             height: 50
         },
+        invincible: true,
     }
 }
 
 function initializegameobjects(renderer: WebGLRenderer) {
     gameobject.three.renderer = renderer;
-    gameobject.three.materials.push(gameobject.level.floor.material, gameobject.level.obstacle.a.material)
+    gameobject.three.materials.push(gameobject.level.floor.material, gameobject.level.obstacle.a.material);
 }
 
 
@@ -276,5 +320,5 @@ interface Floor extends MeshObject {
 }
 
 interface Obstacle extends MeshObject {
-
+    rearrange: () => void
 };

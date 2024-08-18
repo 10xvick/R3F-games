@@ -52,9 +52,12 @@ export const events = {
         createRenderLoop: (fps = 20) => {
             const interval = 1000 / fps;
             let lastrendertime = 0;
+            let active = true;
 
-            return (fn: (delta: number) => void) => {
+            const x = (fn: (delta: number) => void) => {
                 const loop = () => {
+                    if (!active) return;
+                    // console.log(index);
                     const now = performance.now();
                     const delta = now - lastrendertime;
 
@@ -66,8 +69,20 @@ export const events = {
                     requestAnimationFrame(loop);
                 };
 
-                requestAnimationFrame(loop);
+                return loop;
             };
+
+            const start = (fn: (delta: number) => void) => {
+                lastrendertime = 0;
+                active = true;
+                x(fn)();
+            }
+
+            const stop = () => {
+                active = false;
+            }
+
+            return { start, stop }
         },
 
         render: function (fn: () => void) {
