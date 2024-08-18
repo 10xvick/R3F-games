@@ -5,8 +5,6 @@ import { ease, lerp, tween } from "./utility/lerp";
 import { curvedshadermaterial, texture } from "./utility/materials";
 import { meshlib } from "./meshes";
 
-const instanceid = Math.abs(Math.random() * 1000)
-
 export function creategame_test2(renderer: WebGLRenderer, setters: Array<() => void>) {
     gameobject.three.renderer = renderer;
     return logics(setters);
