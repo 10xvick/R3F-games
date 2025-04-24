@@ -51,9 +51,9 @@ function logics(setters: Array<(x: string) => void>, gameobject: gc) {
                 // return;
                 // initializegameobjects(d.three.renderer);
 
-                const mesh2 = new Mesh(geometry, texturematerial(texture.floor, d.three.scene.fog as FogExp2).value);
+                const mesh2 = new Mesh(geometry, texturematerial(texture.white, d.three.scene.fog as FogExp2).value);
                 utils.set.xyz(mesh2.scale, 800, 500, 10);
-                utils.set.xyz(mesh2.position, 0, 350, 0);
+                utils.set.xyz(mesh2.position, 0, 400, 50);
                 mesh2.rotation.x = Math.PI / 2;
                 d.three.scene.add(mesh2);
 

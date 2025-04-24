@@ -4,7 +4,8 @@ import { lerp } from "./lerp";
 const textureloader = new TextureLoader();
 export const texture = {
     floor: textureloader.load('https://static.vecteezy.com/system/resources/previews/025/466/041/original/cartoon-stone-pavement-seamless-pattern-brick-wall-texture-cracked-rock-paver-gray-street-tiles-top-view-vector.jpg'),//'https://static.vecteezy.com/system/resources/previews/001/339/603/non_2x/stone-brick-wall-seamless-texture-for-jungle-theme-vector.jpg'),
-    obstacle: textureloader.load('https://st4.depositphotos.com/6615378/25088/v/450/depositphotos_250885572-stock-illustration-seamless-texture-of-green-stone.jpg')//'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTnKHTeFEcrSJOf8CKWIGb1gcqD03VJ2n9HSA&s')
+    obstacle: textureloader.load('https://st4.depositphotos.com/6615378/25088/v/450/depositphotos_250885572-stock-illustration-seamless-texture-of-green-stone.jpg'),//'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTnKHTeFEcrSJOf8CKWIGb1gcqD03VJ2n9HSA&s'),
+    white: textureloader.load('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQRoo7mF5OPmwAPu_id3QZsLDPbgkpMmvZLf8WvngALLqjovwDn9-kH039f1EfSukgut-k&usqp=CAU')
 }
 
 const shaders = {
