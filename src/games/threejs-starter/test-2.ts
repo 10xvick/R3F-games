@@ -1,26 +1,28 @@
-import { Box3, BoxGeometry, Mesh, MeshBasicMaterial, PerspectiveCamera, Scene, WebGLRenderer } from "three";
+import { Box3, BoxGeometry, FogExp2, Material, Mesh, MeshBasicMaterial, PerspectiveCamera, PlaneGeometry, Scene, Texture, WebGLRenderer } from "three";
 import { events, utils } from "./utility/utility";
-import TWEEN, { Easing, Tween } from "@tweenjs/tween.js";
+import TWEEN from "@tweenjs/tween.js";
 import { ease, lerp, tween } from "./utility/lerp";
-import { curvedshadermaterial, texture } from "./utility/materials";
+import { curvedshadermaterial, texture, texturematerial } from "./utility/materials";
 import { meshlib } from "./meshes";
 
+type gc = ReturnType<typeof initializegameobjects>;
 export function creategame_test2(renderer: WebGLRenderer, setters: Array<() => void>) {
+    const gameobject = initializegameobjects(renderer);
     gameobject.three.renderer = renderer;
-    return logics(setters);
+    return logics(setters, gameobject);
 }
 type inputfn = Array<() => void>
 
-function logics(setters: Array<(x: string) => void>) {
+function logics(setters: Array<(x: string) => void>, gameobject: gc) {
     // console.log('restart', gameobject)
     const [setstats, setgameover]: any = setters
     const d = gameobject;
     const geometry = new BoxGeometry();
-    const material = new MeshBasicMaterial({ color: 0x00ff00 });
 
-    // d.three.scene.add(new Mesh(geometry, material));
-
-
+    const mat = (texture: Texture) => curvedshadermaterial(texture, gameobject.three.scene.fog as FogExp2)
+    gameobject.three.materials.map(e => {
+        return mat(e.texture);
+    })
 
     const x = {
         action: {
@@ -33,7 +35,7 @@ function logics(setters: Array<(x: string) => void>) {
 
                             if (playerBoundingBox.intersectsBox(obstacleBoundingBox)) {
                                 console.log('Collision detected!');
-                                x.action.gameover();
+                                // x.action.gameover();
                             }
                         });
                 }
@@ -46,7 +48,14 @@ function logics(setters: Array<(x: string) => void>) {
             restart: () => {
                 console.log('restart')
                 d.three.scene.clear();
-                initializegameobjects(d.three.renderer);
+                // return;
+                // initializegameobjects(d.three.renderer);
+
+                const mesh2 = new Mesh(geometry, texturematerial(texture.floor, d.three.scene.fog as FogExp2).value);
+                utils.set.xyz(mesh2.scale, 800, 500, 10);
+                utils.set.xyz(mesh2.position, 0, 350, 0);
+                mesh2.rotation.x = Math.PI / 2;
+                d.three.scene.add(mesh2);
 
                 d.game.to.update = [];
                 d.level.floors = [];
@@ -68,7 +77,7 @@ function logics(setters: Array<(x: string) => void>) {
 
                 d.game.over = false;
                 d.game.score = 0;
-                d.game.speed = 60 * 4 / 2;
+                d.game.speed.value = d.game.speed.min;
                 setgameover(false);
             },
             updatescore: () => {
@@ -76,7 +85,8 @@ function logics(setters: Array<(x: string) => void>) {
                 setstats('xxxscore:' + Math.floor(d.game.score / 10))
             },
             updatespeed: () => {
-                d.game.speed += 1;
+                if (d.game.speed.value < d.game.speed.max)
+                    d.game.speed.value += 1;
             }
         },
         generate: {
@@ -87,7 +97,6 @@ function logics(setters: Array<(x: string) => void>) {
                     utils.set.xyz(obstacle.base.position, utils.number.randomRange(-1, 1) * d.level.row.size / 100, 0, obstacle.base.scale.z / 2.5);
                 }
 
-                // obstacle.rearrange();
                 d.level.obstacle.container.push(obstacle)
                 return obstacle;
             },
@@ -98,13 +107,12 @@ function logics(setters: Array<(x: string) => void>) {
                     prev: null!,
                     obstacle: x.generate.obstacle(),
                     ground: { base: new Mesh(geometry, d.level.floor.material.value) },
-
                 };
 
                 utils.set.xyz(floor.base.scale, d.level.floor.base.size, d.level.floor.base.size, d.level.floor.base.size);
                 utils.set.xyz(floor.ground.base.scale, 2, 1, 1 / d.level.floor.base.size);
 
-                const buildings = meshlib.buildings();
+                const buildings = meshlib.buildings(gameobject.three.scene.fog as FogExp2);
                 d.three.materials.push(buildings.material);
 
                 d.three.scene.add(floor.base);
@@ -143,7 +151,7 @@ function logics(setters: Array<(x: string) => void>) {
                 function updatecurvature() {
                     const uniforms = d.level.floor.material.value.uniforms;
                     const getrandom = () => utils.number.randomRange(-2, 2);
-                    const steps = 10000 / d.game.speed;
+                    const steps = 50;
 
                     Promise.all(
                         [tween(uniforms.curvx.value, getrandom(), steps, (val) => {
@@ -163,12 +171,11 @@ function logics(setters: Array<(x: string) => void>) {
                 return d.level;
             },
             player: () => {
-                const mesh = new Mesh(geometry, new MeshBasicMaterial({ color: 0x005500 }));
-                mesh.scale.x = d.player.scale.x;
-                mesh.scale.y = d.player.scale.y;
-                mesh.scale.z = 10;
+                const mesh = new Mesh(geometry, new MeshBasicMaterial({ color: 0x0055ff }));
+                utils.set.xyz(mesh.scale, d.player.scale.x, d.player.scale.y, 10)
                 d.player.mesh = mesh;
                 d.three.scene.add(mesh);
+
                 d.three.camera.position.z = 100;
                 d.three.camera.rotation.x = Math.PI / 2.5;
                 d.three.camera.position.y = -80;
@@ -180,7 +187,7 @@ function logics(setters: Array<(x: string) => void>) {
                         return (delta: number) => {
                             d.three.camera.position.z = lerp(d.three.camera.position.z, d.player.mesh.position.z + 50, 0.1);
                             d.three.camera.position.x = lerp(d.three.camera.position.x, d.player.mesh.position.x, 0.1);
-                            d.level.floors.forEach(floor => floor.base.position.y -= delta * d.game.speed);
+                            d.level.floors.forEach(floor => floor.base.position.y -= delta * d.game.speed.value);
                         }
                     },
                     move: (dir: number) => {
@@ -248,62 +255,73 @@ function logics(setters: Array<(x: string) => void>) {
     return x;
 }
 
-
-const gameobject = {
-    three: {
-        renderer: {} as WebGLRenderer,
-        scene: new Scene(),
-        camera: new PerspectiveCamera(75, 1, 0.1, 10000),
-        materials: [] as Array<any>,
-    },
-    game: {
-        score: 0,
-        speed: 60 * 4 / 2,
-        gravity: 150,
-        takeinput: true,
-        over: false,
-        loop: null! as any,
-        to: {
-            update: [] as Array<(delta: number) => void>,
-            input: {
-                any: [] as inputfn, left: [] as inputfn, right: [] as inputfn, up: [] as inputfn
-            }
-        }
-    },
-    level: {
-        row: { size: 40 },
-        floors: [] as Floor[],
-        floor: {
-            base: { size: 100 },
-            total: 6,
-            curvature: {
-                x: 0,
-                y: 0,
-                z: 0
-            }, material: curvedshadermaterial(texture.floor),
-        }, obstacle: {
-            a: {
-                material: curvedshadermaterial(texture.obstacle)
-            },
-            container: [] as Array<Obstacle>
-        }
-    },
-    player: {
-        scale: { x: 10, y: 10 },
-        base: 10,
-        mesh: null! as Mesh,
-        floor: null as Floor | null,
-        jump: {
-            steps: 0,
-            height: 50
-        },
-        invincible: true,
-    }
-}
-
 function initializegameobjects(renderer: WebGLRenderer) {
+    const scene = new Scene();
+    scene.fog = new FogExp2(0xfaffff, 0.004);
+
+    const mat = (texture: Texture) => curvedshadermaterial(texture, scene.fog as FogExp2)
+
+    const gameobject = {
+        three: {
+            renderer: {} as WebGLRenderer,
+            scene: scene,
+            camera: new PerspectiveCamera(75, 1, 0.1, 10000),
+            materials: [] as Array<any>,
+        },
+        game: {
+            score: 0,
+            speed: { max: 60 * 10, min: 60 * 2, value: 60 * 2 },
+            gravity: 150,
+            takeinput: true,
+            over: false,
+            loop: null! as any,
+            to: {
+                update: [] as Array<(delta: number) => void>,
+                input: {
+                    any: [] as inputfn, left: [] as inputfn, right: [] as inputfn, up: [] as inputfn
+                }
+            }
+        },
+        level: {
+            row: { size: 40 },
+            floors: [] as Floor[],
+            floor: {
+                base: { size: 100 },
+                total: 6,
+                curvature: {
+                    x: 0,
+                    y: 0,
+                    z: 0
+                },
+                material: mat(texture.floor),
+            }, obstacle: {
+                a: {
+                    material: mat(texture.obstacle),
+                },
+                container: [] as Array<Obstacle>
+            }
+        },
+        player: {
+            scale: { x: 10, y: 10 },
+            base: 10,
+            mesh: null! as Mesh,
+            floor: null as Floor | null,
+            jump: {
+                steps: 0,
+                height: 50
+            },
+            invincible: true,
+        },
+    }
+
     gameobject.three.renderer = renderer;
     gameobject.three.materials.push(gameobject.level.floor.material, gameobject.level.obstacle.a.material);
+
+    return gameobject;
+}
+
+function resetgameobjects(gameobject: gc) {
+
 }
 
 

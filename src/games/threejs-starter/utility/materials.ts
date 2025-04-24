@@ -1,4 +1,4 @@
-import { DoubleSide, ShaderMaterial, Texture, TextureLoader } from "three";
+import { DoubleSide, Fog, FogBase, FogExp2, ShaderMaterial, Texture, TextureLoader } from "three";
 import { lerp } from "./lerp";
 
 const textureloader = new TextureLoader();
@@ -8,6 +8,19 @@ export const texture = {
 }
 
 const shaders = {
+    vertex: {
+        basic_fogexp2: `
+        varying vec2 vUv;
+        varying float vFogDepth;  // Added this line
+        
+        void main() {
+          vUv = uv;
+          vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+          vFogDepth = -mvPosition.z;  // Calculate fog depth
+          gl_Position = projectionMatrix * mvPosition;
+        }
+      `
+    },
     sintexture: {
         vertex: `
         varying vec2 vUv;
@@ -85,45 +98,63 @@ const shaders = {
       `
     }, curvedworld: {
         vertex: `
-        varying vec2 vUv;
-        uniform float curvx;
-        uniform float curvy;
-        uniform float curvz;
-
-        void main() {
-            vUv = uv;
-
-            // Adjust the amount of curvature
-            float curveAmount = 0.001;
-
-            // Transform the position to world space
-            vec4 worldPosition = modelMatrix * vec4(position, 1.0);
-
-            // Calculate the distance from the world origin in the YZ plane
-            float distance = length(worldPosition.yz);
-            float offset = curveAmount * distance * distance;
-
-            // Apply the offset to the x position to create a curve
-            worldPosition.x += offset * curvx;
-            worldPosition.y += offset * curvy;
-            worldPosition.z += offset * curvz;
-
-            // Transform the position back to view space and then to clip space
-            vec4 viewPosition = viewMatrix * worldPosition;
-            gl_Position = projectionMatrix * viewPosition;
-        }
+          varying vec2 vUv;
+          varying float vFogDepth;
+      
+          uniform float curvx;
+          uniform float curvy;
+          uniform float curvz;
+      
+          void main() {
+              vUv = uv;
+      
+              // Adjust the amount of curvature
+              float curveAmount = 0.001;
+      
+              // Transform the position to world space
+              vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+      
+              // Calculate the distance from the world origin in the YZ plane
+              float distance = length(worldPosition.yz);
+              float offset = curveAmount * distance * distance;
+      
+              // Apply the offset to the x position to create a curve
+              worldPosition.x += offset * curvx;
+              worldPosition.y += offset * curvy;
+              worldPosition.z += offset * curvz;
+      
+              // Transform the position back to view space and then to clip space
+              vec4 viewPosition = viewMatrix * worldPosition;
+              gl_Position = projectionMatrix * viewPosition;
+      
+              // Pass depth to fragment for fog
+              vFogDepth = -viewPosition.z;
+          }
         `,
         fragment: `
-        uniform sampler2D texturex;
-        varying vec2 vUv;
+            uniform sampler2D texturex;
+            uniform vec3 fogColor;
+            uniform float fogDensity;
         
-        void main() {
-            gl_FragColor = texture2D(texturex, vUv);
-        }`
+            varying vec2 vUv;
+            varying float vFogDepth;
+        
+            void main() {
+                vec4 texColor = texture2D(texturex, vUv);
+        
+                // Compute fog factor using exponential formula
+                float fogFactor = 1.0 - exp(-pow(fogDensity * vFogDepth, 2.0));
+                fogFactor = clamp(fogFactor, 0.0, 1.0);
+        
+                // Mix the texture color with the fog color
+                gl_FragColor = mix(texColor, vec4(fogColor, texColor.a), fogFactor);
+            }
+        `
     }
+
 }
 
-export const curvedshadermaterial = (texture: Texture) => {
+export const curvedshadermaterial = (texture: Texture, fog: FogExp2) => {
     const mat = new ShaderMaterial({
         wireframe: false,
         // side: DoubleSide,
@@ -134,6 +165,8 @@ export const curvedshadermaterial = (texture: Texture) => {
             curvx: { value: 1 },
             curvy: { value: 1 },
             curvz: { value: 2 },
+            fogColor: { value: fog.color },
+            fogDensity: { value: fog.density }
         }
     })
     return {
@@ -154,6 +187,23 @@ export const curvedshadermaterial = (texture: Texture) => {
                 mat.uniforms.curvx.value = z;
             }
         },
+    }
+}
+export const texturematerial = (texture: Texture, fog: FogExp2) => {
+    const mat = new ShaderMaterial({
+        wireframe: false,
+        // side: DoubleSide,
+        vertexShader: shaders.vertex.basic_fogexp2,
+        fragmentShader: shaders.curvedworld.fragment,
+        uniforms: {
+            texturex: { value: texture },
+            fogColor: { value: fog.color },
+            fogDensity: { value: fog.density }
+        },
+
+    })
+    return {
+        value: mat,
     }
 }
 

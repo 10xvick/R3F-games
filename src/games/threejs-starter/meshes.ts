@@ -1,14 +1,14 @@
-import { BoxGeometry, Mesh } from "three";
+import { BoxGeometry, Color, FogExp2, Mesh } from "three";
 import { utils } from "./utility/utility";
 import { curvedshadermaterial, texture } from "./utility/materials";
 
 
 
 export const meshlib = {
-    buildings: () => {
+    buildings: (fog: FogExp2) => {
 
         const geometry = new BoxGeometry();
-        const material = curvedshadermaterial(texture.obstacle);
+        const material = curvedshadermaterial(texture.obstacle, fog);
         const x = {
             mesh: {
                 left_inner: { base: new Mesh(geometry, material.value) },
